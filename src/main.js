@@ -22,6 +22,12 @@ import mapboxgl from 'mapbox-gl';
 import LegendControl from 'mapboxgl-legend';
 import '../node_modules/mapboxgl-legend/dist/style.css';
 
+document.addEventListener('DOMContentLoaded', async function () {
+    // Dynamically load the button.js script
+    await import('./button.js');
+});
+
+
 let allData = [];
 // allData = allData.concat(RUN1DATA, RUN2DATA, MAPS1DATA, MAPS2DATA, MAPS3DATA, FLIGHT1DATA);
 allData = allData.concat(WRUN1DATA, WRUN2DATA);
@@ -305,9 +311,6 @@ function popUp(id) {
     map.on('mouseleave', id, () => {
         map.getCanvas().style.cursor = '';
     });
-}
-function testFunction() {
-    alert("foo");
 }
 map.on('load', () => {
     // addPath(map, 'maps1', MAPS1DATA);
