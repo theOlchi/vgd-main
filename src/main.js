@@ -11,9 +11,9 @@
 // import { MAPS3DATA } from './coords.js';
 // import { FLIGHT1DATA } from './coords.js';
 // import { FLIGHT2DATA } from './coords.js';
-import { WRUN1DATA } from './coords.js';
-import { WRUN2DATA } from './coords.js';
-import { WRUN3DATA } from './coords.js';
+import {WRUN1DATA} from './coords.js';
+import {WRUN2DATA} from './coords.js';
+import {WRUN3DATA} from './coords.js';
 
 import '../style.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -27,6 +27,7 @@ let allData = [];
 allData = allData.concat(WRUN1DATA, WRUN2DATA);
 // allData = allData.concat(FLIGHT1DATA);
 
+// theolchi's token
 mapboxgl.accessToken = 'pk.eyJ1IjoidGhlb2xjaGkiLCJhIjoiY2xudzRicjhyMDZpeDJ0bzZoMmp5MHFqZSJ9.hsNF-iGKdszPYr1b0TXTcA';
 
 const map = new mapboxgl.Map({
@@ -86,15 +87,17 @@ function rgbToHex(rgbColor) {
     return `#${rgbColor.map(component => component.toString(16).padStart(2, '0')).join('')}`;
 }
 
-function addPath(map, id, data) {
+function addPath(map, id, coords) {
     let path = {
         'type': 'geojson',
         'data': {
             'type': 'Feature',
-            'properties': {},
+            'properties': {
+                'description': id + '<br></br>' + '<button onclick="testFunction()">Hello World!</button>',
+            },
             'geometry': {
                 'type': 'LineString',
-                'coordinates': data,
+                'coordinates': coords,
             },
         },
     };
@@ -112,17 +115,18 @@ function addPath(map, id, data) {
             'line-width': 8,
         },
     });
+    popUp(id);
 }
 
 // extrusion with fixed height
-function addExtrudedPath(map, id, data, groundHeight) {
-    const elevation = data[2];
+function addExtrudedPath(map, id, coords, groundHeight) {
+    const elevation = coords[2];
 
     const lineString = {
         'type': 'Feature',
         'geometry': {
             'type': 'LineString',
-            'coordinates': data,
+            'coordinates': coords,
         },
         'properties': {
             'elevation': elevation,
@@ -271,7 +275,40 @@ function addExtrudedPath(map, id, data, groundHeight) {
   });
 }*/
 
+function popUp(id) {
+    // When a click event occurs on a feature in the places layer, open a popup at the
+    // location of the feature, with description HTML from its properties.
+    map.on('click', id, (e) => {
+        // get the coordinates from the click event
+        let coordinates = e.lngLat.toArray();
+        const description = e.features[0].properties.description;
 
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
+    });
+
+    // Change the cursor to a pointer when the mouse is over the places layer.
+    map.on('mouseenter', id, () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change it back to a pointer when it leaves.
+    map.on('mouseleave', id, () => {
+        map.getCanvas().style.cursor = '';
+    });
+}
+function testFunction() {
+    alert("foo");
+}
 map.on('load', () => {
     // addPath(map, 'maps1', MAPS1DATA);
     // addPath(map, 'maps2', MAPS2DATA);
@@ -299,7 +336,7 @@ map.on('style.load', () => {
         'maxzoom': 14,
     });
 // add the DEM source as a terrain layer with exaggerated height
-    map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    map.setTerrain({'source': 'mapbox-dem', 'exaggeration': 1.5});
 });
 
 function calculateMeanValues(data) {
