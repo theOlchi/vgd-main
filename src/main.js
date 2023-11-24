@@ -22,6 +22,8 @@ import mapboxgl from 'mapbox-gl';
 import LegendControl from 'mapboxgl-legend';
 import '../node_modules/mapboxgl-legend/dist/style.css';
 
+import chroma from 'chroma-js';
+
 document.addEventListener('DOMContentLoaded', async function () {
     // Dynamically load the button.js script
     await import('./button.js');
@@ -38,23 +40,32 @@ mapboxgl.accessToken = 'pk.eyJ1IjoidGhlb2xjaGkiLCJhIjoiY2xudzRicjhyMDZpeDJ0bzZoM
 
 const map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/theolchi/clnw50m2r003z01pg94do2adn', // satellite
+    // style: 'mapbox://styles/theolchi/clnw50m2r003z01pg94do2adn', // satellite
     // style: 'mapbox://styles/theolchi/clorauxl600nc01qy4goi6wes', // streets
     // style: 'mapbox://styles/mapbox/satellite-streets-v12', // no idea
-    // style: 'mapbox://styles/mapbox/outdoors-v11', // different streets
+    style: 'mapbox://styles/mapbox/outdoors-v11', // different streets
     center: [calculateMeanValues(allData)[0], calculateMeanValues(allData)[1]],
-    zoom: 16,
+    zoom: 10,
 });
 
 const legend = new LegendControl();
 map.addControl(legend, 'bottom-left');
 
-function getRandomHexColorWithInterval(interval) {
-    const hue = Math.floor(Math.random() * 360); // Generate a random hue value (0-359)
-    const modifiedHue = (hue + interval) % 360; // Add the interval and ensure it stays within the 0-359 range
-    const hslColor = `hsl(${modifiedHue}, 100%, 50%)`; // Create an HSL color with fixed saturation and lightness
-    const rgbColor = hslToRgb(hslColor); // Convert HSL to RGB
-    return rgbToHex(rgbColor); // Convert RGB to hex
+let usedColors = new Set();
+
+function getRandomUniqueHexColorWithInterval(interval) {
+  let hue;
+  do {
+      hue = Math.floor(Math.random() * 360);
+  } while (usedColors.has(hue));
+
+  usedColors.add(hue);
+
+  // Adjust hue to ensure visual distinction
+  const adjustedHue = (hue + interval) % 360;
+  const adjustedColor = chroma.hsl(adjustedHue, 1, 0.5).hex();
+
+  return adjustedColor;
 }
 
 function hslToRgb(hslColor) {
@@ -93,35 +104,142 @@ function rgbToHex(rgbColor) {
     return `#${rgbColor.map(component => component.toString(16).padStart(2, '0')).join('')}`;
 }
 
-function addPath(map, id, coords) {
-    let path = {
-        'type': 'geojson',
-        'data': {
-            'type': 'Feature',
-            'properties': {
-                'description': id + '<br></br>' + '<button onclick="testFunction()">Hello World!</button>',
-            },
-            'geometry': {
-                'type': 'LineString',
-                'coordinates': coords,
-            },
-        },
-    };
-    map.addSource(id, path);
-    map.addLayer({
-        'id': id,
-        'type': 'line',
-        'source': id,
-        'layout': {
-            'line-join': 'round',
-            'line-cap': 'round',
-        },
-        'paint': {
-            'line-color': getRandomHexColorWithInterval(50),
-            'line-width': 8,
-        },
+let currentlyVisiblePath = null;
+
+let endMarker = null;
+let randomMarkers = [];
+
+function generateRandomCoordinatesNearPath(coords) {
+  const randomCoordinates = [];
+  for (let i = 0; i < 20; i++) {
+    const randomIndex = Math.floor(Math.random() * (coords.length - 1));
+    const randomOffset = 0.001; // Adjust this value for a smaller offset
+    const randomCoord = [
+      coords[randomIndex][0] + (Math.random() - 0.5) * randomOffset,
+      coords[randomIndex][1] + (Math.random() - 0.5) * randomOffset,
+    ];
+    randomCoordinates.push(randomCoord);
+  }
+  return randomCoordinates;
+}
+
+function addRandomMarkers(coords) {
+  randomMarkers = [];
+  const randomCoordinates = generateRandomCoordinatesNearPath(coords);
+  randomCoordinates.forEach((coord, index) => {
+    const marker = new mapboxgl.Marker({ color: 'blue' })
+      .setLngLat(coord)
+      .addTo(map)
+      .setPopup(new mapboxgl.Popup().setHTML(index % 2 === 0 ? 'Deer' : 'Goat'));
+
+    // Show popup on marker mouseenter
+    marker.getElement().addEventListener('mouseenter', () => {
+      marker.togglePopup();
     });
-    popUp(id);
+
+    // Hide popup on marker mouseleave
+    marker.getElement().addEventListener('mouseleave', () => {
+      marker.togglePopup();
+    });
+
+    randomMarkers.push(marker);
+  });
+}
+
+function removeRandomMarkers() {
+  randomMarkers.forEach(marker => marker.remove());
+  randomMarkers = [];
+}
+
+function addPath(map, id, coords) {
+  // Generate a unique color for the path
+  let pathColor = getRandomUniqueHexColorWithInterval(50);
+
+  // Add a marker at the beginning of the path
+  const startMarker = new mapboxgl.Marker().setLngLat(coords[0]).addTo(map);
+
+  // Add a marker at the end of the path (initially hidden)
+  endMarker = new mapboxgl.Marker({ color: 'red' }).setLngLat(coords[coords.length - 1]).addTo(map);
+  endMarker.getElement().style.display = 'none';
+
+  // Add the path
+  let path = {
+    'type': 'geojson',
+    'data': {
+      'type': 'Feature',
+      'properties': {
+        'description': id + '<br></br>' + '<button onclick="togglePath(\'' + id + '\', ' + JSON.stringify(coords) + ')">Show Path</button>',
+      },
+      'geometry': {
+        'type': 'LineString',
+        'coordinates': coords,
+      },
+    },
+  };
+  map.addSource(id, path);
+  map.addLayer({
+    'id': id,
+    'type': 'line',
+    'source': id,
+    'layout': {
+      'line-join': 'round',
+      'line-cap': 'round',
+    },
+    'paint': {
+      'line-color': pathColor,
+      'line-width': 8,
+      'line-opacity': 0, // Set initial opacity to 0
+    },
+  });
+
+  // Set up pop-up and mouse events only for the start marker
+  startMarker.setPopup(new mapboxgl.Popup().setHTML(id + '<br></br>' + '<button onclick="togglePath(\'' + id + '\', ' + JSON.stringify(coords) + ')">Show Path</button>'));
+  startMarker.getElement().addEventListener('click', () => {
+    togglePath(id, coords); // Pass coords to togglePath
+    startMarker.togglePopup();
+  });
+}
+
+function togglePath(id, coords) {
+  if (currentlyVisiblePath !== null && currentlyVisiblePath !== id) {
+    // Hide the currently visible path
+    map.setPaintProperty(currentlyVisiblePath, 'line-opacity', 0);
+    removeRandomMarkers(); // Remove markers from the previous path
+  }
+
+  const lineOpacity = map.getPaintProperty(id, 'line-opacity');
+  const newOpacity = lineOpacity === 0 ? 1 : 0;
+
+  // Toggle the opacity of the path
+  map.setPaintProperty(id, 'line-opacity', newOpacity);
+
+  // Update the coordinates of the end marker to the new path's end coordinates
+  endMarker.setLngLat(coords[coords.length - 1]);
+
+  // Toggle the visibility of the end marker
+  if (newOpacity === 1) {
+    endMarker.getElement().style.display = 'block';
+    addRandomMarkers(coords); // Add markers for the current path
+  } else {
+    endMarker.getElement().style.display = 'none';
+  }
+
+  // Fly to the beginning of the path when the button is clicked
+  if (newOpacity === 1) {
+    map.flyTo({
+      center: coords[0],
+      zoom: 16,
+      essential: true,
+      speed: 1.5,
+      curve: 1.42,
+      easing(t) {
+        return t;
+      },
+    });
+  }
+
+  // Update the currently visible path
+  currentlyVisiblePath = newOpacity === 1 ? id : null;
 }
 
 // extrusion with fixed height
