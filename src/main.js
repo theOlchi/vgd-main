@@ -23,6 +23,7 @@ import LegendControl from 'mapboxgl-legend';
 import '../node_modules/mapboxgl-legend/dist/style.css';
 
 import chroma from 'chroma-js';
+import create3dModelLayer from "./3d.js";
 
 document.addEventListener('DOMContentLoaded', async function () {
     // Dynamically load the button.js script
@@ -45,7 +46,8 @@ const map = new mapboxgl.Map({
     // style: 'mapbox://styles/mapbox/satellite-streets-v12', // no idea
     style: 'mapbox://styles/mapbox/outdoors-v11', // different streets
     center: [calculateMeanValues(allData)[0], calculateMeanValues(allData)[1]],
-    zoom: 10,
+    zoom: 15,
+    antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
 });
 
 const legend = new LegendControl();
@@ -54,18 +56,18 @@ map.addControl(legend, 'bottom-left');
 let usedColors = new Set();
 
 function getRandomUniqueHexColorWithInterval(interval) {
-  let hue;
-  do {
-      hue = Math.floor(Math.random() * 360);
-  } while (usedColors.has(hue));
+    let hue;
+    do {
+        hue = Math.floor(Math.random() * 360);
+    } while (usedColors.has(hue));
 
-  usedColors.add(hue);
+    usedColors.add(hue);
 
-  // Adjust hue to ensure visual distinction
-  const adjustedHue = (hue + interval) % 360;
-  const adjustedColor = chroma.hsl(adjustedHue, 1, 0.5).hex();
+    // Adjust hue to ensure visual distinction
+    const adjustedHue = (hue + interval) % 360;
+    const adjustedColor = chroma.hsl(adjustedHue, 1, 0.5).hex();
 
-  return adjustedColor;
+    return adjustedColor;
 }
 
 function hslToRgb(hslColor) {
@@ -110,136 +112,136 @@ let endMarker = null;
 let randomMarkers = [];
 
 function generateRandomCoordinatesNearPath(coords) {
-  const randomCoordinates = [];
-  for (let i = 0; i < 20; i++) {
-    const randomIndex = Math.floor(Math.random() * (coords.length - 1));
-    const randomOffset = 0.001; // Adjust this value for a smaller offset
-    const randomCoord = [
-      coords[randomIndex][0] + (Math.random() - 0.5) * randomOffset,
-      coords[randomIndex][1] + (Math.random() - 0.5) * randomOffset,
-    ];
-    randomCoordinates.push(randomCoord);
-  }
-  return randomCoordinates;
+    const randomCoordinates = [];
+    for (let i = 0; i < 20; i++) {
+        const randomIndex = Math.floor(Math.random() * (coords.length - 1));
+        const randomOffset = 0.001; // Adjust this value for a smaller offset
+        const randomCoord = [
+            coords[randomIndex][0] + (Math.random() - 0.5) * randomOffset,
+            coords[randomIndex][1] + (Math.random() - 0.5) * randomOffset,
+        ];
+        randomCoordinates.push(randomCoord);
+    }
+    return randomCoordinates;
 }
 
 function addRandomMarkers(coords) {
-  randomMarkers = [];
-  const randomCoordinates = generateRandomCoordinatesNearPath(coords);
-  randomCoordinates.forEach((coord, index) => {
-    const marker = new mapboxgl.Marker({ color: 'blue' })
-      .setLngLat(coord)
-      .addTo(map)
-      .setPopup(new mapboxgl.Popup().setHTML(index % 2 === 0 ? 'Deer' : 'Goat'));
+    randomMarkers = [];
+    const randomCoordinates = generateRandomCoordinatesNearPath(coords);
+    randomCoordinates.forEach((coord, index) => {
+        const marker = new mapboxgl.Marker({color: 'blue'})
+            .setLngLat(coord)
+            .addTo(map)
+            .setPopup(new mapboxgl.Popup().setHTML(index % 2 === 0 ? 'Deer' : 'Goat'));
 
-    // Show popup on marker mouseenter
-    marker.getElement().addEventListener('mouseenter', () => {
-      marker.togglePopup();
+        // Show popup on marker mouseenter
+        marker.getElement().addEventListener('mouseenter', () => {
+            marker.togglePopup();
+        });
+
+        // Hide popup on marker mouseleave
+        marker.getElement().addEventListener('mouseleave', () => {
+            marker.togglePopup();
+        });
+
+        randomMarkers.push(marker);
     });
-
-    // Hide popup on marker mouseleave
-    marker.getElement().addEventListener('mouseleave', () => {
-      marker.togglePopup();
-    });
-
-    randomMarkers.push(marker);
-  });
 }
 
 function removeRandomMarkers() {
-  randomMarkers.forEach(marker => marker.remove());
-  randomMarkers = [];
+    randomMarkers.forEach(marker => marker.remove());
+    randomMarkers = [];
 }
 
 function addPath(map, id, coords) {
-  // Generate a unique color for the path
-  let pathColor = getRandomUniqueHexColorWithInterval(50);
+    // Generate a unique color for the path
+    let pathColor = getRandomUniqueHexColorWithInterval(50);
 
-  // Add a marker at the beginning of the path
-  const startMarker = new mapboxgl.Marker().setLngLat(coords[0]).addTo(map);
+    // Add a marker at the beginning of the path
+    const startMarker = new mapboxgl.Marker().setLngLat(coords[0]).addTo(map);
 
-  // Add a marker at the end of the path (initially hidden)
-  endMarker = new mapboxgl.Marker({ color: 'red' }).setLngLat(coords[coords.length - 1]).addTo(map);
-  endMarker.getElement().style.display = 'none';
+    // Add a marker at the end of the path (initially hidden)
+    endMarker = new mapboxgl.Marker({color: 'red'}).setLngLat(coords[coords.length - 1]).addTo(map);
+    endMarker.getElement().style.display = 'none';
 
-  // Add the path
-  let path = {
-    'type': 'geojson',
-    'data': {
-      'type': 'Feature',
-      'properties': {
-        'description': id + '<br></br>' + '<button onclick="togglePath(\'' + id + '\', ' + JSON.stringify(coords) + ')">Show Path</button>',
-      },
-      'geometry': {
-        'type': 'LineString',
-        'coordinates': coords,
-      },
-    },
-  };
-  map.addSource(id, path);
-  map.addLayer({
-    'id': id,
-    'type': 'line',
-    'source': id,
-    'layout': {
-      'line-join': 'round',
-      'line-cap': 'round',
-    },
-    'paint': {
-      'line-color': pathColor,
-      'line-width': 8,
-      'line-opacity': 0, // Set initial opacity to 0
-    },
-  });
+    // Add the path
+    let path = {
+        'type': 'geojson',
+        'data': {
+            'type': 'Feature',
+            'properties': {
+                'description': id + '<br></br>' + '<button onclick="togglePath(\'' + id + '\', ' + JSON.stringify(coords) + ')">Show Path</button>',
+            },
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': coords,
+            },
+        },
+    };
+    map.addSource(id, path);
+    map.addLayer({
+        'id': id,
+        'type': 'line',
+        'source': id,
+        'layout': {
+            'line-join': 'round',
+            'line-cap': 'round',
+        },
+        'paint': {
+            'line-color': pathColor,
+            'line-width': 8,
+            'line-opacity': 0, // Set initial opacity to 0
+        },
+    });
 
-  // Set up pop-up and mouse events only for the start marker
-  startMarker.setPopup(new mapboxgl.Popup().setHTML(id + '<br></br>' + '<button onclick="togglePath(\'' + id + '\', ' + JSON.stringify(coords) + ')">Show Path</button>'));
-  startMarker.getElement().addEventListener('click', () => {
-    togglePath(id, coords); // Pass coords to togglePath
-    startMarker.togglePopup();
-  });
+    // Set up pop-up and mouse events only for the start marker
+    startMarker.setPopup(new mapboxgl.Popup().setHTML(id + '<br></br>' + '<button onclick="togglePath(\'' + id + '\', ' + JSON.stringify(coords) + ')">Show Path</button>'));
+    startMarker.getElement().addEventListener('click', () => {
+        togglePath(id, coords); // Pass coords to togglePath
+        startMarker.togglePopup();
+    });
 }
 
 function togglePath(id, coords) {
-  if (currentlyVisiblePath !== null && currentlyVisiblePath !== id) {
-    // Hide the currently visible path
-    map.setPaintProperty(currentlyVisiblePath, 'line-opacity', 0);
-    removeRandomMarkers(); // Remove markers from the previous path
-  }
+    if (currentlyVisiblePath !== null && currentlyVisiblePath !== id) {
+        // Hide the currently visible path
+        map.setPaintProperty(currentlyVisiblePath, 'line-opacity', 0);
+        removeRandomMarkers(); // Remove markers from the previous path
+    }
 
-  const lineOpacity = map.getPaintProperty(id, 'line-opacity');
-  const newOpacity = lineOpacity === 0 ? 1 : 0;
+    const lineOpacity = map.getPaintProperty(id, 'line-opacity');
+    const newOpacity = lineOpacity === 0 ? 1 : 0;
 
-  // Toggle the opacity of the path
-  map.setPaintProperty(id, 'line-opacity', newOpacity);
+    // Toggle the opacity of the path
+    map.setPaintProperty(id, 'line-opacity', newOpacity);
 
-  // Update the coordinates of the end marker to the new path's end coordinates
-  endMarker.setLngLat(coords[coords.length - 1]);
+    // Update the coordinates of the end marker to the new path's end coordinates
+    endMarker.setLngLat(coords[coords.length - 1]);
 
-  // Toggle the visibility of the end marker
-  if (newOpacity === 1) {
-    endMarker.getElement().style.display = 'block';
-    addRandomMarkers(coords); // Add markers for the current path
-  } else {
-    endMarker.getElement().style.display = 'none';
-  }
+    // Toggle the visibility of the end marker
+    if (newOpacity === 1) {
+        endMarker.getElement().style.display = 'block';
+        addRandomMarkers(coords); // Add markers for the current path
+    } else {
+        endMarker.getElement().style.display = 'none';
+    }
 
-  // Fly to the beginning of the path when the button is clicked
-  if (newOpacity === 1) {
-    map.flyTo({
-      center: coords[0],
-      zoom: 16,
-      essential: true,
-      speed: 1.5,
-      curve: 1.42,
-      easing(t) {
-        return t;
-      },
-    });
-  }
+    // Fly to the beginning of the path when the button is clicked
+    if (newOpacity === 1) {
+        map.flyTo({
+            center: coords[0],
+            zoom: 16,
+            essential: true,
+            speed: 1.5,
+            curve: 1.42,
+            easing(t) {
+                return t;
+            },
+        });
+    }
 
-  // Update the currently visible path
-  currentlyVisiblePath = newOpacity === 1 ? id : null;
+    // Update the currently visible path
+    currentlyVisiblePath = newOpacity === 1 ? id : null;
 }
 
 // extrusion with fixed height
@@ -430,6 +432,31 @@ function popUp(id) {
         map.getCanvas().style.cursor = '';
     });
 }
+
+const modelOrigin = [15.555465146899223, 48.26112845912576];
+const modelAltitude = 0;
+// const modelRotate = [Math.PI / 2, 0, 0];
+const modelRotate = [Math.PI / 2, -1, 0];
+
+const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+    modelOrigin,
+    modelAltitude
+);
+
+// transformation parameters to position, rotate and scale the 3D model onto the map
+const modelTransform = {
+    translateX: modelAsMercatorCoordinate.x,
+    translateY: modelAsMercatorCoordinate.y,
+    translateZ: modelAsMercatorCoordinate.z,
+    rotateX: modelRotate[0],
+    rotateY: modelRotate[1],
+    rotateZ: modelRotate[2],
+    /* Since the 3D model is in real world meters, a scale transform needs to be
+    * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+    */
+    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
+};
+
 map.on('load', () => {
     // addPath(map, 'maps1', MAPS1DATA);
     // addPath(map, 'maps2', MAPS2DATA);
@@ -443,22 +470,32 @@ map.on('load', () => {
     const specialElevation = map.queryTerrainElevation(specialCoord);
     console.log(specialElevation);
     addExtrudedPath(map, 'flight1', FLIGHT1DATA, specialElevation);*/
+
     // addPath(map, 'flight2', FLIGHT2DATA);
+
     addPath(map, 'wrun1', WRUN1DATA);
     addPath(map, 'wrun2', WRUN2DATA);
+
+    map.addLayer(create3dModelLayer([15.555465146899223, 48.26112845912576], 0, [Math.PI / 2, -1, 0], '/3d/weyersdorf2.0.glb'), 'waterway-label');
+
     // add3DPath(map, 'wrun3', WRUN3DATA);
+    // map.addSource(createCustomLayer(modelTransform), '3d-layer');
 });
 
-map.on('style.load', () => {
+/*map.on('style.load', () => {
     map.addSource('mapbox-dem', {
         'type': 'raster-dem',
         'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
         'tileSize': 512,
         'maxzoom': 14,
     });
+
+    map.addLayer(create3dModelLayer(modelTransform), 'waterway-label');
+
+    // map.addSource(customLayer, '3d-layer');
 // add the DEM source as a terrain layer with exaggerated height
     map.setTerrain({'source': 'mapbox-dem', 'exaggeration': 1.5});
-});
+});*/
 
 function calculateMeanValues(data) {
     if (data.length === 0) {

@@ -14,6 +14,7 @@
   "dependencies": {
     "chroma-js": "^2.4.2",
     "mapbox-gl": "^2.15.0",
-    "mapboxgl-legend": "^1.14.0"
+    "mapboxgl-legend": "^1.14.0",
+    "three": "^0.159.0"
   }
 }
