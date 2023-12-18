@@ -7,14 +7,17 @@
 
 // import { RUN1DATA } from './coords.js';
 // import { RUN2DATA } from './coords.js';
-import { MAPS1DATA } from './coords.js';
-import { MAPS2DATA } from './coords.js';
-import { MAPS3DATA } from './coords.js';
-import {FLIGHT1DATA} from './coords.js';
-import {FLIGHT2DATA} from './coords.js';
-import {WRUN1DATA} from './coords.js';
-import {WRUN2DATA} from './coords.js';
-import {WRUN3DATA} from './coords.js';
+// import {WRUN1DATA} from './coords.js';
+// import {WRUN2DATA} from './coords.js';
+// import {WRUN3DATA} from './coords.js';
+import { FLIGHT1DATA, FLIGHT2DATA, MAPS1DATA, MAPS2DATA, MAPS3DATA } from './coords.js';
+const dataSets = {
+  FLIGHT1DATA,
+  FLIGHT2DATA,
+  MAPS1DATA,
+  MAPS2DATA,
+  MAPS3DATA
+};
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -26,7 +29,10 @@ import chroma from 'chroma-js';
 import {onMounted, watch} from "vue";
 
 import create3dModelLayer from "./3dModelLayer.js";
-import {state} from './showModelState.js';
+import {state, stateKeys} from './showModelState.js';
+
+import fs from 'fs';
+import path from 'path';
 
 document.addEventListener('DOMContentLoaded', async function () {
   // Dynamically load the windowToggle3d.js script
@@ -199,7 +205,7 @@ onMounted(() => {
     });
 
     // Set up pop-up and mouse events only for the start marker
-    startMarker.setPopup(new mapboxgl.Popup().setHTML(id + '<br>' + '<button onclick="window.toggle3d()">Toggle 3D</button>'));
+    startMarker.setPopup(new mapboxgl.Popup().setHTML(id + '<br>' + `<button onclick="window.toggle3d('${id}')">Toggle 3D</button>`));
     startMarker.getElement().addEventListener('click', () => {
       togglePath(id, coords); // Pass coords to togglePath
       startMarker.togglePopup();
@@ -448,8 +454,8 @@ onMounted(() => {
     addPath(map, 'maps3', MAPS3DATA);
     // addPath(map, 'run1', RUN1DATA);
     // addPath(map, 'run2', RUN2DATA);
-    addPath(map, 'flight1', FLIGHT1DATA);
-    addPath(map, 'flight2', FLIGHT2DATA);
+    addPath(map, 'FLIGHT1DATA', FLIGHT1DATA);
+    addPath(map, 'FLIGHT2DATA', FLIGHT2DATA);
 
     // [14.5118463798673, 48.3680606170131, 477.0581177],
     /*const specialCoord = [14.5118463798673, 48.3680606170131];
@@ -501,15 +507,46 @@ onMounted(() => {
     return [meanX, meanY];
   }
 
-  watch(() => state.modelIsShown, (newValue) => {
-    if (newValue) {
-      map.addLayer(create3dModelLayer(FLIGHT1DATA[0], map.queryTerrainElevation(FLIGHT1DATA[0]) + 20, [Math.PI / 2, 0, 0], '/3d/hgb-flight.glb', 'flight1-3d'), 'waterway-label');
-      console.log('added');
-    } else {
-      map.removeLayer('flight1-3d');
-      console.log('removed');
-    }
-  });
+  watch(
+      () => stateKeys.map(key => state[key]),
+      (newValues, oldValues) => {
+        newValues.forEach((newValue, index) => {
+          if (newValue !== oldValues[index]) {
+            const checkFileExists = async (url) => {
+              try {
+                const response = await fetch(url, {
+                  method: 'HEAD', // HEAD requests only get the headers, not the body
+                  mode: 'no-cors'  // This is to avoid CORS issues
+                });
+                if (response.status === 404) {
+                  console.log('File not found:', url);
+                  return false;
+                }
+                return response.status === 200;
+              } catch (error) {
+                console.error('An error occurred while checking if the file exists:', error);
+                return false;
+              }
+            };
+            const filePath = `/3d/${stateKeys[index]}.glb`;
+            checkFileExists(filePath).then(exists => {
+              if (exists) {
+                if (map.getLayer(`${stateKeys[index]}-3d`)) {
+                  map.removeLayer(`${stateKeys[index]}-3d`);
+                  return;
+                }
+                let stateKeyName = stateKeys[index];
+                let dataSet = dataSets[stateKeyName];
+                map.addLayer(create3dModelLayer(dataSet[0], map.queryTerrainElevation(dataSet[0]) + 20, [Math.PI / 2, 0, 0], `${filePath}`, `${stateKeys[index]}-3d`), 'waterway-label');
+              } else {
+                console.log("There is no 3d model for this path.");
+              }
+            });
+          }
+        });
+      },
+      {deep: true}
+  );
 });
 </script>
 

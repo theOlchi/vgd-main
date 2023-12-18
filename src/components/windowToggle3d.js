@@ -1,9 +1,8 @@
 import { state } from './showModelState.js';
 
-window.toggle3d = function () {
-    if (state.modelIsShown) {
-        state.modelIsShown = false;
-        return;
+window.toggle3d = function (id) {
+    if (!state[id]) {
+        state[id] = false;
     }
-    state.modelIsShown = true;
+    state[id] = !state[id];
 }
