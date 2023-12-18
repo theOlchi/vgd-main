@@ -9,12 +9,14 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
     "vite": "^4.4.5"
   },
   "dependencies": {
     "chroma-js": "^2.4.2",
     "mapbox-gl": "^2.15.0",
     "mapboxgl-legend": "^1.14.0",
-    "three": "^0.159.0"
+    "three": "^0.159.0",
+    "vue": "^3.3.12"
   }
 }
