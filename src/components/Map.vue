@@ -7,9 +7,9 @@
 
 // import { RUN1DATA } from './coords.js';
 // import { RUN2DATA } from './coords.js';
-// import { MAPS1DATA } from './coords.js';
-// import { MAPS2DATA } from './coords.js';
-// import { MAPS3DATA } from './coords.js';
+import { MAPS1DATA } from './coords.js';
+import { MAPS2DATA } from './coords.js';
+import { MAPS3DATA } from './coords.js';
 import {FLIGHT1DATA} from './coords.js';
 import {FLIGHT2DATA} from './coords.js';
 import {WRUN1DATA} from './coords.js';
@@ -153,7 +153,6 @@ onMounted(() => {
   }
 
   function removeRandomMarkers() {
-    console.log('removeRandomMarkers');
     randomMarkers.forEach(marker => marker.remove());
     randomMarkers = [];
   }
@@ -208,12 +207,12 @@ onMounted(() => {
   }
 
   function togglePath(id, coords) {
-    // this does not behave as expected
-    // if (currentlyVisiblePath !== null && currentlyVisiblePath !== id) {
-    //   // Hide the currently visible path
-    //   // map.setPaintProperty(currentlyVisiblePath, 'line-opacity', 0);
-    //   // removeRandomMarkers(); // Remove markers from the previous path
-    // }
+    // for toggling visibility of the path if different path is clicked
+    if (currentlyVisiblePath !== null && currentlyVisiblePath !== id) {
+      // Hide the currently visible path
+      map.setPaintProperty(currentlyVisiblePath, 'line-opacity', 0);
+      removeRandomMarkers(); // Remove markers from the previous path
+    }
 
     const lineOpacity = map.getPaintProperty(id, 'line-opacity');
     const newOpacity = lineOpacity === 0 ? 1 : 0;
@@ -444,13 +443,13 @@ onMounted(() => {
   }
 
   map.on('load', () => {
-    // addPath(map, 'maps1', MAPS1DATA);
-    // addPath(map, 'maps2', MAPS2DATA);
-    // addPath(map, 'maps3', MAPS3DATA);
+    addPath(map, 'maps1', MAPS1DATA);
+    addPath(map, 'maps2', MAPS2DATA);
+    addPath(map, 'maps3', MAPS3DATA);
     // addPath(map, 'run1', RUN1DATA);
     // addPath(map, 'run2', RUN2DATA);
     addPath(map, 'flight1', FLIGHT1DATA);
-    // addPath(map, 'flight2', FLIGHT2DATA);
+    addPath(map, 'flight2', FLIGHT2DATA);
 
     // [14.5118463798673, 48.3680606170131, 477.0581177],
     /*const specialCoord = [14.5118463798673, 48.3680606170131];
