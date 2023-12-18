@@ -49,6 +49,12 @@ function toggleTerrain() {
   isTerrainEnabled.value = !isTerrainEnabled.value;
 }
 
+let isSatelliteView = ref(false);
+
+const toggleMapView = () => {
+  isSatelliteView.value = !isSatelliteView.value;
+}
+
 onMounted(() => {
 
 // allData = allData.concat(RUN1DATA, RUN2DATA, MAPS1DATA, MAPS2DATA, MAPS3DATA, FLIGHT1DATA);
@@ -558,18 +564,46 @@ onMounted(() => {
         }
       }
   );
+
+  watch(
+      () => isSatelliteView.value,
+      (newValue) => {
+        if (newValue) {
+          map.setStyle('mapbox://styles/theolchi/clnw50m2r003z01pg94do2adn');
+        } else {
+          map.setStyle('mapbox://styles/mapbox/outdoors-v11');
+        }
+
+        // Re-add paths after the style has been loaded
+        map.once('style.load', () => {
+          addPath(map, 'maps1', MAPS1DATA);
+          addPath(map, 'maps2', MAPS2DATA);
+          addPath(map, 'maps3', MAPS3DATA);
+          addPath(map, 'FLIGHT1DATA', FLIGHT1DATA);
+          addPath(map, 'FLIGHT2DATA', FLIGHT2DATA);
+        });
+        removeRandomMarkers();
+      }
+  );
 });
 </script>
 
 <template>
   <div id="map"></div>
   <button @click="toggleTerrain()" id="toggleTerrainButton">Toggle Terrain</button>
+  <button @click="toggleMapView" id="toggleMapView">Toggle Map View</button>
 </template>
 
 <style scoped>
 #toggleTerrainButton {
   position: absolute;
-  top: 10px;
+  bottom: 400px;
+  left: 10px;
+  z-index: 1;
+}
+#toggleMapView {
+  position: absolute;
+  bottom: 450px;
   left: 10px;
   z-index: 1;
 }
