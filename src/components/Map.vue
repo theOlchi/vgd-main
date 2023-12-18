@@ -26,25 +26,33 @@ import LegendControl from 'mapboxgl-legend';
 import '../../node_modules/mapboxgl-legend/dist/style.css';
 
 import chroma from 'chroma-js';
-import {onMounted, watch} from "vue";
+import {onMounted, watch, onBeforeMount, ref} from "vue";
 
 import create3dModelLayer from "./3dModelLayer.js";
 import {state, stateKeys} from './showModelState.js';
-
-import fs from 'fs';
-import path from 'path';
 
 document.addEventListener('DOMContentLoaded', async function () {
   // Dynamically load the windowToggle3d.js script
   await import('./windowToggle3d.js');
 
 });
+let allData = [];
+onBeforeMount(() => {
+  for (let data of Object.values(dataSets)) {
+    allData = allData.concat(data);
+  }
+});
+
+let isTerrainEnabled = ref(false);
+
+function toggleTerrain() {
+  isTerrainEnabled.value = !isTerrainEnabled.value;
+}
 
 onMounted(() => {
-  let allData = [];
+
 // allData = allData.concat(RUN1DATA, RUN2DATA, MAPS1DATA, MAPS2DATA, MAPS3DATA, FLIGHT1DATA);
 // allData = allData.concat(WRUN1DATA, WRUN2DATA);
-  allData = allData.concat(FLIGHT1DATA, FLIGHT2DATA);
 
 // Boris's token
   mapboxgl.accessToken = 'pk.eyJ1IjoidGhlb2xjaGkiLCJhIjoiY2xudzRicjhyMDZpeDJ0bzZoMmp5MHFqZSJ9.hsNF-iGKdszPYr1b0TXTcA';
@@ -470,21 +478,6 @@ onMounted(() => {
     // add3DPath(map, 'wrun3', WRUN3DATA);
   });
 
-  /*map.on('style.load', () => {
-      map.addSource('mapbox-dem', {
-          'type': 'raster-dem',
-          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          'tileSize': 512,
-          'maxzoom': 14,
-      });
-
-      // map.addLayer(create3dModelLayer(modelTransform), 'waterway-label');
-
-      // map.addSource(customLayer, '3d-layer');
-  // add the DEM source as a terrain layer with exaggerated height
-      map.setTerrain({'source': 'mapbox-dem', 'exaggeration': 1.5});
-  });*/
-
   function calculateMeanValues(data) {
     if (data.length === 0) {
       return [0, 0]; // Return [0, 0] if the array is empty to avoid division by zero
@@ -547,13 +540,37 @@ onMounted(() => {
       },
       {deep: true}
   );
+
+  watch(
+      () => isTerrainEnabled.value,
+      (newValue) => {
+        if (newValue) {
+          map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512,
+            'maxzoom': 14,
+          });
+
+          map.setTerrain({'source': 'mapbox-dem', 'exaggeration': 1.5});
+        } else {
+          map.setTerrain(null);
+        }
+      }
+  );
 });
 </script>
 
 <template>
   <div id="map"></div>
+  <button @click="toggleTerrain()" id="toggleTerrainButton">Toggle Terrain</button>
 </template>
 
 <style scoped>
-
+#toggleTerrainButton {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+}
 </style>
