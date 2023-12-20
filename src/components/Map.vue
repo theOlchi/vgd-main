@@ -536,7 +536,14 @@ onMounted(() => {
                 }
                 let stateKeyName = stateKeys[index];
                 let dataSet = dataSets[stateKeyName];
-                map.addLayer(create3dModelLayer(dataSet[0], map.queryTerrainElevation(dataSet[0]) + 20, [Math.PI / 2, 0, 0], `${filePath}`, `${stateKeys[index]}-3d`), 'waterway-label');
+                let offset = 0;
+                if (stateKeyName === 'FLIGHT1DATA') {
+                  offset = 30;
+                }
+                if (stateKeyName === 'FLIGHT2DATA') {
+                  offset = 0;
+                }
+                map.addLayer(create3dModelLayer(dataSet[0], map.queryTerrainElevation(dataSet[0]) + offset, [Math.PI / 2, 0, 0], `${filePath}`, `${stateKeys[index]}-3d`), 'waterway-label');
               } else {
                 console.log("There is no 3d model for this path.");
               }
