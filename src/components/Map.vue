@@ -527,7 +527,8 @@ onMounted(() => {
                 return false;
               }
             };
-            const filePath = `/3d/${stateKeys[index]}.glb`;
+            // const filePath = `@/assets/3d/${stateKeys[index]}.glb`;
+            const filePath = `./src/assets/3d/${stateKeys[index]}.glb`;
             checkFileExists(filePath).then(exists => {
               if (exists) {
                 if (map.getLayer(`${stateKeys[index]}-3d`)) {
@@ -568,6 +569,7 @@ onMounted(() => {
           map.setTerrain({'source': 'mapbox-dem', 'exaggeration': 1.5});
         } else {
           map.setTerrain(null);
+          map.removeSource('mapbox-dem');
         }
       }
   );
