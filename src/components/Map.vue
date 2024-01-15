@@ -721,7 +721,8 @@ map.on('load', async () => {
                 return false;
               }
             };
-            const filePath = `/3d/${stateKeys[index]}.glb`;
+            // const filePath = `@/assets/3d/${stateKeys[index]}.glb`;
+            const filePath = `./src/assets/3d/${stateKeys[index]}.glb`;
             checkFileExists(filePath).then(exists => {
               if (exists) {
                 if (map.getLayer(`${stateKeys[index]}-3d`)) {

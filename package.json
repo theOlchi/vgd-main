@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",
+    "gh-pages": "^6.1.1",
     "vite": "^4.4.5"
   },
   "dependencies": {
@@ -18,5 +21,6 @@
     "mapboxgl-legend": "^1.14.0",
     "three": "^0.159.0",
     "vue": "^3.3.12"
-  }
+  },
+  "homepage": "https://theolchi.github.io/vgd/"
 }
