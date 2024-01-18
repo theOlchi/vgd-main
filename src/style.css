@@ -11,8 +11,118 @@ body {
   bottom: 0;
 }
 
+.form-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ECEFF1;
+  padding: 10px;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 2px;
+}
+
+.close-button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-size: 16px;
+  margin-top: 3px;
+  margin-right: 8px;
+}
+
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  display: none;
+}
+
+.overlay.active {
+  display: block;
+}
+
+.hourmin {
+  width: 50px;
+}
+
+.bottom-right-button {
+  cursor: pointer;
+  background-color: #ECEFF1;
+  border: 2px solid rgb(31, 31, 31); 
+  padding: 10px;
+  border-radius: 5px; 
+  z-index: 101; 
+  transition: background-color 0.3s ease, left 0.3s ease;
+}
+
+.bottom-right-button:hover {
+  background-color: #CFD8DC;
+}
+
+.bottom-right-button img {
+  width: 50px;
+  height: auto; 
+}
+
+.satellite-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+}
+
+.menu__toggle:checked ~ .satellite-button {
+  left: 320px; /* Adjust the distance from the left when the burger menu is opened */
+}
+
+.terrain-button {
+  position: fixed;
+  bottom: 20px;
+  left: 110px;
+}
+
+.paths-animals-button {
+  position: fixed;
+  bottom: 20px;
+  left: 200px;
+}
+
+.greyed-out-reset {
+  background: none;
+  border: none;
+  width: 300px;
+  display: block;
+  padding: 12px 24px;
+  color: #888888;
+  font-family: 'Roboto', sans-serif;
+  font-size: 20px;
+  font-weight: 200;
+  font-style: italic;
+  text-decoration: none;
+  transition-duration: .25s;
+  text-align: left;
+}
+
 /*
- * Hamburger menu css
+ * base hamburger menu css
  * by @alvarotrigo on codepen.io
  * link: https://codepen.io/alvarotrigo/pen/yLzaPVJ
 */
@@ -74,6 +184,7 @@ body {
   background-color: #ECEFF1;
   box-shadow: 2px 2px 6px rgba(0, 0, 0, .4);
   transition-duration: .25s;
+  text-align: left;
 }
 .menu__item {
   background: none;
@@ -87,7 +198,9 @@ body {
   font-weight: 600;
   text-decoration: none;
   transition-duration: .25s;
+  text-align: left;
 }
+
 .menu__item:hover {
   background-color: #CFD8DC;
 }

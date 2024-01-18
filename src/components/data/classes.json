@@ -1,0 +1,54 @@
+{
+    "classes": {
+		"0": {
+			"name": "Unknown",
+			"wikidata": 0,
+			"color": 16777215
+		},
+		"1": {
+			"name": "NA",
+			"wikidata": 1,
+			"color": 7495228
+		},
+		"2": {
+			"name": "Cervus elaphus",
+			"wikidata": 2,
+			"color": 16711680
+		},
+		"3": {
+			"name": "Sus scrofa",
+			"wikidata": 3,
+			"color": 65280
+		},
+		"4": {
+			"name": "Capreolus capreolus",
+			"wikidata": 4,
+			"color": 255
+		},
+		"5": {
+			"name": "Rupicapra rupicapra",
+			"wikidata": 5,
+			"color": 65535
+		},
+		"6": {
+			"name": "Capra Ibex",
+			"wikidata": 6,
+			"color": 16762880
+		},
+		"7": {
+			"name": "Dama dama mesopotamica",
+			"wikidata": 7,
+			"color": 16711935
+		},
+		"8": {
+			"name": "Homo superior (Übermensch)",
+			"wikidata": 8,
+			"color": 5463431
+		},
+		"-1": {
+			"name": "unknown",
+			"wikidata": "null",
+			"color": 11184810
+		}
+	}
+}
