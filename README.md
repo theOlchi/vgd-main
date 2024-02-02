@@ -2,31 +2,68 @@
 Semester Project For Visualizing Geospatial Data
 
 # Install dependencies if not already installed
-Run in commandl ine:
+Run in command line:
 ```
 npm install
 ```
 
 # Run
-Run in commandl ine:
+Run in command line:
 ```
 npm run dev
 ```
 
 # Deploy
-Run in commandl ine:
+Run in command line:
 ```
 npm run deploy
 ```
+The deployed site is avialable here: <https://theolchi.github.io/vgd/>
+
 For changes in the deploy pipeline see:
 [Deploying Vite App](https://medium.com/@aishwaryaparab1/deploying-vite-deploying-vite-app-to-github-pages-166fff40ffd3)
+
+# Extract coordinates from GPX
+1. Add GPX file in ./coord-extraction/new.gpx
+2. ```python
+   # add filename here
+   gpx_file = open('new.gpx', 'r')
+   ```
+3. ```python
+   # if you want to output to a folder
+   # default is './'
+   save_path = 'output-folder-name/'
+   ```
+4. ```python
+   # add your output filename
+   doc_name = 'output-name'
+   ```
+5. If you want you can uncomment chopped choords to limit the amount of coordinates and comment the original coords section:
+   ```python
+   # original coords
+   doc_name = 'flight1'
+   save_path = 'hgb-txt/'
+   doc_name_path = os.path.join(save_path, doc_name + ".txt")
+   # with open(doc_name_path, 'w') as f:
+   #     for element in coords:
+   #         formatted_item = f"{element},\n"  # Add a line break after each element
+   #         f.write(formatted_item)
+   
+   # chopped coords
+   chopped_coords = coords[::1000]
+   with open(doc_name_path, 'w') as f:
+       for element in chopped_coords:
+           formatted_item = f"{element},\n"  # Add a line break after each element
+           f.write(formatted_item)
+   ```
+6. You will get a new .txt file either in **./coord-extraction/** or in the specified output folder with the extracted coordinates which can be copy-pasted directly to a new const in **./src/components/coords.js**.
 
 # Create 3D model
 See AR Branch README for the creation of 3D models. Important node: Export as **glTF 2.0**
 <https://github.com/theTscheZ/Visualizing-Geospatial-Data-AR-Unity>
 
 # Add a new Path to the map
-1. Add a new const NEWDATANAME to **./src/components/coords.js**
+1. Add a new const NEWDATANAME to **./src/components/coords.js** and insert coordinates
 ```javascript
 export const NEWDATANAME = [
 //[longitude,      latitude,         elevation]
@@ -67,7 +104,7 @@ const pathData = [
 ```
 
 # Add a new 3D model to the map
-In **./src/components/Map.vue** if there is a 3D model for the data add it to **/public/3d/NEWDATANAME.glb** and in the watch() function add
+In **./src/components/Map.vue** if there is a 3D model for the data add it to **/public/3d/NEWDATANAME.glb** and in the watch() function add an offset default is 0
 ```javascript
   watch(
       () => stateKeys.map(key => state[key]),
