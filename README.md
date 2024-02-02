@@ -148,7 +148,7 @@ In **./src/components/Map.vue** if there is a 3D model for the data add it to **
 ```
 
 # Problem with 3D model on main branch
-Unfortunately, there is currently an error when trying to display the 3D model in the main branch. If you click the FLIGHT1DATA e.g. and then press on the Toggle3D button you see nothing or the model is popping up for a short moment and disappearing in the next. If you then tild the map you will see the model but errors are thrown in the console, saying Uncaught TypeError: 'get' on proxy: property 'modelViewMatrix'. This is probably related to the globalMap reactive-element in **./src/components/Map.vue** and the way Vue handles reactive-elements. A solution for that could be to move every function which uses the map in the same scope.
+Unfortunately, there is currently an error when trying to display the 3D model in the main branch. If you click the FLIGHT1DATA e.g. and then press on the Toggle3D button you see nothing or the model is popping up for a short moment and disappearing in the next. If you then tild the map you will see the model but errors are thrown in the console, saying Uncaught TypeError: 'get' on proxy: property 'modelViewMatrix'. This is probably related to the globalMap reactive-element in **./src/components/Map.vue** and the way Vue handles reactive-elements. A solution for that could be to move every function which uses the map in the same scope. On the [performant3d](https://github.com/theOlchi/vgd/tree/performant3d) branch it is working as expected and the methods are used similarly on main. Currently this branch is deployed on <https://theolchi.github.io/vgd/>.
 
 # Authors
 Aaron Bandion, Boris Steiner, Michael Plasser
