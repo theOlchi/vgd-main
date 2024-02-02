@@ -3,7 +3,7 @@ import os.path
 
 # Parsing an existing file:
 # -------------------------
-gpx_file = open('test-flight-data/2023-04-04.gpx', 'r')
+gpx_file = open('filename.gpx', 'r')
 # gpx_file = open('test-flight-data/Jan-19th-2023-13-33-52-Flight-Airdata.gpx', 'r')
 # gpx_file = open('hgb-data/maps1.gpx', 'r')
 # gpx_file = open('hgb-gpx/run2.gpx', 'r')
@@ -20,7 +20,7 @@ for track in gpx.tracks:
 
 # original coords
 doc_name = 'flight1'
-save_path = 'hgb-txt/'
+save_path = './'
 doc_name_path = os.path.join(save_path, doc_name + ".txt")
 with open(doc_name_path, 'w') as f:
     for element in coords:
